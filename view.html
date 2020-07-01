@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Excel column generator</title>
+</head>
+
+<style>
+    .block {
+        display: flex;
+    }
+    .field {
+        margin-left: 20px;
+        margin-right: 20px;
+        padding-left: 10px;
+        margin-bottom: 20px;
+        width: 200px;
+        height: 40px;
+        border: 0;
+        outline: 0;
+        border-bottom: 2px solid;
+        border-bottom-color: lightgray;
+        font-size: 16px;
+    }
+    .submit-button {
+        background: lightskyblue;
+        width: 100px;
+        height: 40px;
+        border-style: none;
+        margin-left: 20px;
+        font-size: 16px;
+    }
+</style>
+
+<body>
+    <div>
+        <h1>Excel column generator</h1>
+    </div>
+
+    <form>
+        <div class="block">
+            <span>
+                <input class="field" type="text" id="columnToStart" placeholder="Column to start (Defaults to A)"><br><br>
+            </span>
+            <span>
+                <input class="field" type="number" id="rowCount" placeholder="No of rows"><br><br>
+            </span>
+            <span>
+                <input class="field" type="number" id="columnCount" placeholder="No of columns"><br><br>
+            </span>
+            <span>
+                <input class="submit-button" type="button" value="Submit" onclick="getColumnNames()"/>
+            </span>
+        </div>
+        <span id="response-data">
+        </span>
+    </form>
+
+    <script>
+        function getColumnNames() {
+            var startColumn = document.getElementById("columnToStart").value;
+            var rowCount = document.getElementById("rowCount").value;
+            var columnCount = document.getElementById("columnCount").value;
+            if (rowCount === "0" || rowCount === "") {
+                alert("Row count should be greater than 0")
+                return
+            }
+            if (columnCount === "0" || columnCount === "") {
+                alert("Column count should be greater than 0")
+                return
+            }
+            if (startColumn === "") {
+                startColumn = "A"
+            }
+            var params = JSON.stringify({"StartColumn": startColumn, "Count": rowCount*columnCount})
+
+            var request = new XMLHttpRequest();
+            request.open("POST", "/column");
+            request.setRequestHeader("contentType", "application/json")
+
+            request.onreadystatechange = function() {
+                if (this.readyState === this.DONE) {
+                    if (this.status === 200) {
+                        if (this.responseText != null) {
+                            var responseObject = JSON.parse(this.responseText)
+                            var columnNames = responseObject.ColumnNames;
+                            populateTable(rowCount, columnCount, columnNames)
+                        }
+                        else {
+                            alert("Error: no data received from server")
+                        }
+                    } else {
+                        var status = this.status
+                        alert("Error: " + status + " " + this.responseText)
+                    }
+                }
+            };
+            request.send(params);
+        }
+
+        function populateTable(rowCount, columnCount, columnNames) {
+            var responseDiv = document.getElementById("response-data");
+            var table = document.createElement('table');
+            table.style.width = '100%';
+            table.setAttribute('border', '1');
+            var tableBody = document.createElement('tbody');
+            for (var i = 0; i < rowCount; i++) {
+                var tr = document.createElement('tr');
+                for (var j = 0; j < columnCount; j++) {
+                    var td = document.createElement('td');
+                    td.appendChild(document.createTextNode(columnNames[i+j]))
+                    tr.appendChild(td)
+                }
+                tableBody.appendChild(tr);
+            }
+            table.appendChild(tableBody);
+            responseDiv.innerHTML = ""
+            responseDiv.appendChild(table)
+        }
+    </script>
+</body>
+
+</html>
