@@ -59,6 +59,7 @@
     <script>
         function getColumnNames() {
             var startColumn = document.getElementById("columnToStart").value;
+            startColumn = startColumn.toUpperCase()
             var rowCount = document.getElementById("rowCount").value;
             var columnCount = document.getElementById("columnCount").value;
             if (rowCount === "0" || rowCount === "") {
